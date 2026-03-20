@@ -9,13 +9,15 @@ import pika
 from worker.celery_app import app
 from worker.config import settings
 from worker.database import get_db
+from worker.metrics import ORDER_PROCESSING_DURATION, ORDERS_PROCESSED
 from worker.models import Order
+from worker.telemetry import get_tracer
 
 logger = logging.getLogger(__name__)
+tracer = get_tracer()
 
 
 def publish_event(routing_key: str, body: dict) -> None:
-    # Ensure URL ends with %2F for vhost '/' (pika URLParameters quirk)
     broker_url = settings.broker_url
     if broker_url.endswith("//"):
         broker_url = broker_url[:-1] + "%2F"
@@ -44,47 +46,68 @@ def publish_event(routing_key: str, body: dict) -> None:
     retry_backoff_max=60,
 )
 def process_order(self, order_id: str) -> dict:
-    logger.info(
-        "Processing order %s (attempt %d/%d)",
-        order_id,
-        self.request.retries + 1,
-        self.max_retries + 1,
-    )
+    with tracer.start_as_current_span("process_order") as span:
+        span.set_attribute("order.id", order_id)
+        span.set_attribute("celery.retry", self.request.retries)
+        start_time = time.perf_counter()
 
-    db = next(get_db())
-    try:
-        order = db.get(Order, uuid_mod.UUID(order_id))
-        if order is None:
-            raise ValueError(f"Order {order_id} not found")
-
-        order.status = "processing"
-        db.commit()
-        logger.info("Order %s status: processing", order_id)
-
-        time.sleep(uniform(2, 5))
-
-        order.status = "completed"
-        db.commit()
-        logger.info("Order %s status: completed", order_id)
-
-        publish_event(
-            "order.completed",
-            {"event": "order.completed", "order_id": order_id},
+        logger.info(
+            "Processing order",
+            extra={
+                "order_id": order_id,
+                "attempt": self.request.retries + 1,
+                "max_attempts": self.max_retries + 1,
+            },
         )
 
-        return {"order_id": order_id, "status": "completed"}
-    except ValueError:
-        logger.error("Order %s not found, not retrying", order_id)
-        raise
-    except Exception:
-        db.rollback()
-        is_final_attempt = self.request.retries >= self.max_retries
-        if is_final_attempt:
+        db = next(get_db())
+        try:
             order = db.get(Order, uuid_mod.UUID(order_id))
-            if order and order.status != "completed":
-                order.status = "failed"
-                db.commit()
-                logger.error("Order %s failed after all retries", order_id)
-        raise
-    finally:
-        db.close()
+            if order is None:
+                raise ValueError(f"Order {order_id} not found")
+
+            order.status = "processing"
+            db.commit()
+            logger.info("Order status changed", extra={"order_id": order_id, "status": "processing"})
+
+            processing_time = uniform(2, 5)
+            span.set_attribute("order.processing_time_seconds", processing_time)
+            time.sleep(processing_time)
+
+            order.status = "completed"
+            db.commit()
+
+            duration = time.perf_counter() - start_time
+            ORDER_PROCESSING_DURATION.observe(duration)
+            ORDERS_PROCESSED.labels(status="completed").inc()
+
+            logger.info(
+                "Order completed",
+                extra={"order_id": order_id, "status": "completed", "duration_ms": round(duration * 1000)},
+            )
+
+            publish_event(
+                "order.completed",
+                {"event": "order.completed", "order_id": order_id},
+            )
+
+            return {"order_id": order_id, "status": "completed"}
+        except ValueError:
+            ORDERS_PROCESSED.labels(status="failed").inc()
+            span.set_attribute("error", True)
+            logger.error("Order not found, not retrying", extra={"order_id": order_id})
+            raise
+        except Exception:
+            db.rollback()
+            span.set_attribute("error", True)
+            is_final_attempt = self.request.retries >= self.max_retries
+            if is_final_attempt:
+                order = db.get(Order, uuid_mod.UUID(order_id))
+                if order and order.status != "completed":
+                    order.status = "failed"
+                    db.commit()
+                    ORDERS_PROCESSED.labels(status="failed").inc()
+                    logger.error("Order failed after all retries", extra={"order_id": order_id})
+            raise
+        finally:
+            db.close()

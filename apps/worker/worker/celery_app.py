@@ -1,7 +1,19 @@
 from celery import Celery
+from celery.signals import setup_logging as celery_setup_logging
 from kombu import Exchange, Queue
 
 from worker.config import settings
+from worker.telemetry import setup_telemetry
+
+setup_telemetry()
+
+
+@celery_setup_logging.connect
+def on_setup_logging(**kwargs):
+    """Override Celery's logging to use our JSON formatter."""
+    from worker.logging_config import setup_logging
+    setup_logging()
+
 
 app = Celery("worker")
 
