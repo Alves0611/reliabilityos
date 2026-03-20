@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: reliabilityos
+  description: ReliabilityOS
+  annotations:
+    github.com/project-slug: Alves0611/reliabilityos
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: service
+  lifecycle: experimental
+  owner: user:default/Alves0611
