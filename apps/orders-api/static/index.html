@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReliabilityOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f1117;
+  --surface: #1a1f2e;
+  --surface-hover: #232a3b;
+  --border: #2a3144;
+  --text: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --blue: #3b82f6;
+  --green: #4ade80;
+  --yellow: #fbbf24;
+  --red: #f87171;
+  --radius: 12px;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.logo span { color: var(--blue); }
+
+.health-bar {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.health-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  transition: background 0.3s;
+}
+
+.dot.up { background: var(--green); }
+.dot.down { background: var(--red); }
+
+/* ── Main Layout ── */
+main {
+  display: grid;
+  grid-template-columns: 1fr 340px 380px;
+  gap: 0;
+  height: calc(100vh - 57px);
+}
+
+.panel {
+  padding: 24px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+}
+
+.panel:last-child { border-right: none; }
+
+.panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+/* ── Products ── */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.product-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.product-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--blue);
+  transform: translateY(-2px);
+}
+
+.product-card:active { transform: translateY(0); }
+
+.product-name {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.product-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.product-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.product-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.product-stock {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: rgba(74, 222, 128, 0.1);
+  color: var(--green);
+  font-weight: 500;
+}
+
+.product-stock.low {
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--yellow);
+}
+
+.product-stock.out {
+  background: rgba(248, 113, 113, 0.1);
+  color: var(--red);
+}
+
+.add-hint {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.product-card:hover .add-hint { opacity: 1; }
+
+/* ── Cart ── */
+.cart-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.cart-empty-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+  opacity: 0.4;
+}
+
+.cart-items { display: flex; flex-direction: column; gap: 8px; }
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.cart-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cart-item-name {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cart-item-price {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qty-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.qty-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--blue);
+}
+
+.qty-value {
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.cart-footer {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.cart-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.cart-total-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.cart-total-value {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.btn-place {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: var(--blue);
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-place:hover { filter: brightness(1.1); }
+.btn-place:active { transform: scale(0.98); }
+.btn-place:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+.cart-error {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--red);
+}
+
+/* ── Live Orders ── */
+.orders-list { display: flex; flex-direction: column; gap: 8px; }
+
+.order-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  transition: border-color 0.3s;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.order-id {
+  font-size: 12px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: var(--text-secondary);
+}
+
+.order-time {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.order-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-total {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.order-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.status-pending {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--blue);
+}
+
+.status-processing {
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--yellow);
+}
+
+.status-completed {
+  background: rgba(74, 222, 128, 0.1);
+  color: var(--green);
+}
+
+.status-failed {
+  background: rgba(248, 113, 113, 0.1);
+  color: var(--red);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-pending .status-dot {
+  background: var(--blue);
+  animation: pulse 2s infinite;
+}
+
+.status-processing .status-dot {
+  background: var(--yellow);
+  animation: pulse 1s infinite;
+}
+
+.status-completed .status-dot { background: var(--green); }
+.status-failed .status-dot { background: var(--red); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.order-card.just-completed {
+  border-color: var(--green);
+  animation: glow 1s ease-out;
+}
+
+@keyframes glow {
+  0% { box-shadow: 0 0 20px rgba(74, 222, 128, 0.3); }
+  100% { box-shadow: none; }
+}
+
+.orders-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.orders-empty-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+  opacity: 0.4;
+}
+
+/* ── Section divider ── */
+.section-divider {
+  margin: 20px 0 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3a4560; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Reliability<span>OS</span></div>
+  <div class="health-bar">
+    <div class="health-item">
+      <div class="dot" id="health-db"></div>
+      <span>PostgreSQL</span>
+    </div>
+    <div class="health-item">
+      <div class="dot" id="health-mq"></div>
+      <span>RabbitMQ</span>
+    </div>
+    <div class="health-item">
+      <div class="dot" id="health-redis"></div>
+      <span>Redis</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Products Panel -->
+  <div class="panel">
+    <div class="panel-title">Products</div>
+    <div class="products-grid" id="products-grid"></div>
+  </div>
+
+  <!-- Cart Panel -->
+  <div class="panel">
+    <div class="panel-title">New Order</div>
+    <div id="cart-container">
+      <div class="cart-empty" id="cart-empty">
+        <div class="cart-empty-icon">🛒</div>
+        Click a product to add it
+      </div>
+      <div class="cart-items" id="cart-items"></div>
+      <div class="cart-footer" id="cart-footer" style="display:none">
+        <div class="cart-total">
+          <span class="cart-total-label">Total</span>
+          <span class="cart-total-value" id="cart-total">$0.00</span>
+        </div>
+        <button class="btn-place" id="btn-place" onclick="placeOrder()">Place Order</button>
+        <div class="cart-error" id="cart-error" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Orders Panel -->
+  <div class="panel" style="border-right:none">
+    <div class="panel-title">Live Orders</div>
+    <div id="orders-container">
+      <div class="orders-empty" id="orders-empty">
+        <div class="orders-empty-icon">📋</div>
+        Orders will appear here
+      </div>
+      <div class="orders-list" id="orders-list"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const API = '';
+let products = [];
+let cart = {};
+let trackedOrders = [];
+let pollTimers = {};
+
+// ── Products ──
+async function loadProducts() {
+  try {
+    const res = await fetch(`${API}/products`);
+    products = await res.json();
+    renderProducts();
+  } catch (e) {
+    console.error('Failed to load products:', e);
+  }
+}
+
+function renderProducts() {
+  const grid = document.getElementById('products-grid');
+  grid.innerHTML = products.map(p => {
+    const stockClass = p.stock === 0 ? 'out' : p.stock <= 20 ? 'low' : '';
+    const stockLabel = p.stock === 0 ? 'Out of stock' : `${p.stock} in stock`;
+    return `
+      <div class="product-card" onclick="addToCart('${p.id}')" ${p.stock === 0 ? 'style="opacity:0.5;pointer-events:none"' : ''}>
+        <div class="add-hint">+ Add</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-desc">${p.description || ''}</div>
+        <div class="product-footer">
+          <span class="product-price">$${p.price}</span>
+          <span class="product-stock ${stockClass}">${stockLabel}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Cart ──
+function addToCart(productId) {
+  const product = products.find(p => p.id === productId);
+  if (!product || product.stock === 0) return;
+
+  if (cart[productId]) {
+    if (cart[productId].qty < product.stock) {
+      cart[productId].qty++;
+    }
+  } else {
+    cart[productId] = { product, qty: 1 };
+  }
+  renderCart();
+}
+
+function updateQty(productId, delta) {
+  if (!cart[productId]) return;
+  const product = cart[productId].product;
+  cart[productId].qty += delta;
+
+  if (cart[productId].qty <= 0) {
+    delete cart[productId];
+  } else if (cart[productId].qty > product.stock) {
+    cart[productId].qty = product.stock;
+  }
+  renderCart();
+}
+
+function renderCart() {
+  const items = Object.values(cart);
+  const emptyEl = document.getElementById('cart-empty');
+  const itemsEl = document.getElementById('cart-items');
+  const footerEl = document.getElementById('cart-footer');
+  const errorEl = document.getElementById('cart-error');
+
+  errorEl.style.display = 'none';
+
+  if (items.length === 0) {
+    emptyEl.style.display = 'block';
+    itemsEl.innerHTML = '';
+    footerEl.style.display = 'none';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  footerEl.style.display = 'block';
+
+  itemsEl.innerHTML = items.map(({ product, qty }) => `
+    <div class="cart-item">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${product.name}</div>
+        <div class="cart-item-price">$${product.price} each</div>
+      </div>
+      <div class="qty-controls">
+        <button class="qty-btn" onclick="updateQty('${product.id}', -1)">−</button>
+        <span class="qty-value">${qty}</span>
+        <button class="qty-btn" onclick="updateQty('${product.id}', 1)">+</button>
+      </div>
+    </div>
+  `).join('');
+
+  const total = items.reduce((sum, { product, qty }) => sum + parseFloat(product.price) * qty, 0);
+  document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
+}
+
+// ── Place Order ──
+async function placeOrder() {
+  const btn = document.getElementById('btn-place');
+  const errorEl = document.getElementById('cart-error');
+  errorEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Placing...';
+
+  const items = Object.values(cart).map(({ product, qty }) => ({
+    product_id: product.id,
+    quantity: qty,
+  }));
+
+  try {
+    const res = await fetch(`${API}/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Failed to place order');
+    }
+
+    const order = await res.json();
+    cart = {};
+    renderCart();
+    addTrackedOrder(order);
+    loadProducts(); // refresh stock
+  } catch (e) {
+    errorEl.textContent = e.message;
+    errorEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Place Order';
+  }
+}
+
+// ── Live Orders ──
+function addTrackedOrder(order) {
+  trackedOrders.unshift({
+    id: order.id,
+    total: order.total,
+    status: order.status,
+    created_at: order.created_at,
+    items: order.items,
+  });
+  renderOrders();
+  startPolling(order.id);
+}
+
+function startPolling(orderId) {
+  if (pollTimers[orderId]) return;
+  pollTimers[orderId] = setInterval(async () => {
+    try {
+      const res = await fetch(`${API}/orders/${orderId}`);
+      const order = await res.json();
+      const tracked = trackedOrders.find(o => o.id === orderId);
+      if (!tracked) return;
+
+      const oldStatus = tracked.status;
+      tracked.status = order.status;
+
+      if (order.status === 'completed' || order.status === 'failed') {
+        clearInterval(pollTimers[orderId]);
+        delete pollTimers[orderId];
+
+        if (oldStatus !== 'completed' && order.status === 'completed') {
+          tracked.justCompleted = true;
+          setTimeout(() => { tracked.justCompleted = false; renderOrders(); }, 1500);
+        }
+
+        loadProducts(); // refresh stock counts
+      }
+
+      renderOrders();
+    } catch (e) {
+      console.error('Poll error:', e);
+    }
+  }, 2000);
+}
+
+function renderOrders() {
+  const emptyEl = document.getElementById('orders-empty');
+  const listEl = document.getElementById('orders-list');
+
+  if (trackedOrders.length === 0) {
+    emptyEl.style.display = 'block';
+    listEl.innerHTML = '';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  listEl.innerHTML = trackedOrders.map(o => {
+    const elapsed = timeAgo(o.created_at);
+    const completedClass = o.justCompleted ? ' just-completed' : '';
+    return `
+      <div class="order-card${completedClass}">
+        <div class="order-header">
+          <span class="order-id">${o.id.substring(0, 8)}…</span>
+          <span class="order-time">${elapsed}</span>
+        </div>
+        <div class="order-body">
+          <span class="order-total">$${o.total}</span>
+          <span class="order-status status-${o.status}">
+            <span class="status-dot"></span>
+            ${o.status}
+          </span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function timeAgo(isoString) {
+  const seconds = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+  if (seconds < 5) return 'just now';
+  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  return `${Math.floor(seconds / 3600)}h ago`;
+}
+
+// ── Health ──
+async function checkHealth() {
+  try {
+    const res = await fetch(`${API}/health`);
+    const data = await res.json();
+    setDot('health-db', data.database === 'up');
+    setDot('health-mq', data.rabbitmq === 'up');
+    // Redis not directly exposed in health, infer from overall
+    setDot('health-redis', data.status === 'healthy');
+  } catch {
+    setDot('health-db', false);
+    setDot('health-mq', false);
+    setDot('health-redis', false);
+  }
+}
+
+function setDot(id, isUp) {
+  const el = document.getElementById(id);
+  el.classList.toggle('up', isUp);
+  el.classList.toggle('down', !isUp);
+}
+
+// ── Load existing orders ──
+async function loadExistingOrders() {
+  try {
+    const res = await fetch(`${API}/orders`);
+    const orders = await res.json();
+    orders.slice(0, 10).reverse().forEach(o => {
+      trackedOrders.unshift(o);
+      if (o.status === 'pending' || o.status === 'processing') {
+        startPolling(o.id);
+      }
+    });
+    renderOrders();
+  } catch (e) {
+    console.error('Failed to load orders:', e);
+  }
+}
+
+// ── Init ──
+loadProducts();
+loadExistingOrders();
+checkHealth();
+setInterval(checkHealth, 5000);
+// Refresh time-ago labels every 10s
+setInterval(renderOrders, 10000);
+</script>
+</body>
+</html>
