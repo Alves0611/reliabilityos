@@ -10,11 +10,14 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 PRODUCTS = [
-    {"name": "Widget Pro", "price": Decimal("29.99"), "stock": 100, "description": "A reliable widget"},
-    {"name": "Gadget Ultra", "price": Decimal("49.99"), "stock": 50, "description": "An ultra gadget"},
-    {"name": "Connector Basic", "price": Decimal("9.99"), "stock": 200, "description": "A basic connector"},
-    {"name": "Sensor Max", "price": Decimal("79.99"), "stock": 30, "description": "A max sensor"},
-    {"name": "Module Core", "price": Decimal("19.99"), "stock": 150, "description": "A core module"},
+    {"name": "Banana Orgânica", "price": Decimal("2.49"), "stock": 120, "description": "Cacho com 6 unidades, importada do Equador"},
+    {"name": "Ovos Caipira", "price": Decimal("5.99"), "stock": 80, "description": "Dúzia de ovos grandes, galinhas livres"},
+    {"name": "Abacate Hass", "price": Decimal("1.89"), "stock": 200, "description": "Maduro e pronto pra consumo"},
+    {"name": "Pão de Fermentação Natural", "price": Decimal("6.50"), "stock": 40, "description": "Artesanal, assado na hora"},
+    {"name": "Iogurte Grego", "price": Decimal("4.29"), "stock": 150, "description": "500g, natural, alto teor proteico"},
+    {"name": "Salmão Atlântico", "price": Decimal("12.99"), "stock": 30, "description": "Filé fresco, porção de 300g"},
+    {"name": "Tomate Cereja", "price": Decimal("3.49"), "stock": 90, "description": "Bandeja 250g, amadurecido no pé"},
+    {"name": "Leite de Aveia", "price": Decimal("3.99"), "stock": 100, "description": "1L, edição barista"},
 ]
 
 

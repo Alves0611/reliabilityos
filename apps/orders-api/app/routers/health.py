@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, Response
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,4 +42,4 @@ async def ready(db: AsyncSession = Depends(get_db)):
 
 @router.get("/metrics")
 async def metrics():
-    return PlainTextResponse("# placeholder — implemented in Phase 2\n")
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
