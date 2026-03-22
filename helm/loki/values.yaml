@@ -1,0 +1,77 @@
+fullnameOverride: loki
+
+deploymentMode: SingleBinary
+
+loki:
+  auth_enabled: false
+
+  storage:
+    type: s3
+    bucketNames:
+      chunks: loki-logs-444065722670
+      ruler: loki-logs-444065722670
+    s3:
+      region: us-east-1
+
+  commonConfig:
+    replication_factor: 1
+
+  schemaConfig:
+    configs:
+      - from: "2024-01-01"
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+
+  limits_config:
+    reject_old_samples: true
+    reject_old_samples_max_age: 168h
+    ingestion_rate_mb: 16
+    ingestion_burst_size_mb: 32
+    retention_period: 168h
+
+  compactor:
+    retention_enabled: true
+    delete_request_store: s3
+    working_directory: /var/loki/compactor
+
+serviceAccount:
+  create: true
+  name: loki
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::444065722670:role/EKS_Loki_Role"
+
+singleBinary:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: gp2
+
+gateway:
+  enabled: false
+
+chunksCache:
+  enabled: false
+
+resultsCache:
+  enabled: false
+
+read:
+  replicas: 0
+write:
+  replicas: 0
+backend:
+  replicas: 0
+
+service:
+  port: 3100
