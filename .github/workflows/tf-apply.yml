@@ -1,0 +1,114 @@
+name: Terraform Apply
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  plan-vpc:
+    name: Plan VPC
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: terraform/01-vpc
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: terraform/01-vpc
+        run: terraform plan -no-color
+
+  apply-vpc:
+    name: Apply VPC
+    needs: plan-vpc
+    runs-on: ubuntu-latest
+    environment: prd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: terraform/01-vpc
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: terraform/01-vpc
+        run: terraform apply -auto-approve
+
+  plan-cluster:
+    name: Plan Cluster
+    needs: apply-vpc
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: terraform/02-cluster
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: terraform/02-cluster
+        run: terraform plan -no-color
+        env:
+          TF_VAR_github_token: ${{ secrets.ARGOCD_GITHUB_TOKEN }}
+
+  apply-cluster:
+    name: Apply Cluster
+    needs: plan-cluster
+    runs-on: ubuntu-latest
+    environment: prd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: terraform/02-cluster
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: terraform/02-cluster
+        run: terraform apply -auto-approve
+        env:
+          TF_VAR_github_token: ${{ secrets.ARGOCD_GITHUB_TOKEN }}
