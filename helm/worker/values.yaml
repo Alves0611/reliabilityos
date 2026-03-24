@@ -1,0 +1,19 @@
+replicaCount: 1
+
+image:
+  repository: 444065722670.dkr.ecr.us-east-1.amazonaws.com/reliabilityos/worker
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+env:
+  WORKER_DATABASE_URL: "postgresql+psycopg2://orders:orders@postgresql.reliabilityos.svc.cluster.local:5432/orders"
+  WORKER_BROKER_URL: "amqp://guest:guest@rabbitmq.reliabilityos.svc.cluster.local:5672//"
+  WORKER_RESULT_BACKEND: "redis://redis-master.reliabilityos.svc.cluster.local:6379/0"
