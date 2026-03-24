@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: https://charts.bitnami.com/bitnami
       chart: rabbitmq
-      targetRevision: 15.1.5
+      targetRevision: 16.0.5
       helm:
         releaseName: rabbitmq
         valueFiles:
