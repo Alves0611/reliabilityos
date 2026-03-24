@@ -6,6 +6,11 @@ resource "aws_eks_node_group" "this" {
   node_role_arn   = aws_iam_role.node_group.arn
   subnet_ids      = local.private_subnet_ids
 
+  launch_template {
+    id      = aws_launch_template.node_group.id
+    version = aws_launch_template.node_group.latest_version
+  }
+
   scaling_config {
     desired_size = var.node_group_desired_size
     max_size     = var.node_group_max_size
@@ -16,6 +21,7 @@ resource "aws_eks_node_group" "this" {
     aws_iam_role_policy_attachment.node_group_AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node_group_AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node_group_AmazonEC2ContainerRegistryReadOnly,
+    aws_eks_addon.vpc_cni,
   ]
 
   tags = var.tags
