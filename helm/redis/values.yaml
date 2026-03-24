@@ -1,3 +1,12 @@
+image:
+  registry: docker.io
+  repository: bitnamilegacy/redis
+  tag: latest
+
+global:
+  security:
+    allowInsecureImages: true
+
 architecture: standalone
 
 auth:
