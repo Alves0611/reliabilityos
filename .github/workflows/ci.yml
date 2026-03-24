@@ -99,19 +99,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set image tag
         id: tag
         run: echo "tag=sha-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Update orders-api values
+      - name: Update orders-api image tag
         if: needs.detect-changes.outputs.orders-api == 'true'
         run: |
           sed -i 's|tag:.*|tag: "${{ steps.tag.outputs.tag }}"|' helm/orders-api/values.yaml
 
-      - name: Update worker values
+      - name: Update worker image tag
         if: needs.detect-changes.outputs.worker == 'true'
         run: |
           sed -i 's|tag:.*|tag: "${{ steps.tag.outputs.tag }}"|' helm/worker/values.yaml
@@ -119,8 +117,8 @@ jobs:
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add helm/*/values.yaml
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add helm/orders-api/values.yaml helm/worker/values.yaml
           git diff --staged --quiet && echo "No changes to commit" && exit 0
-          git commit -m "chore: update image tags to ${{ steps.tag.outputs.tag }}"
+          git commit -m "chore: [NewImage] update image tags to ${{ steps.tag.outputs.tag }}"
           git push
