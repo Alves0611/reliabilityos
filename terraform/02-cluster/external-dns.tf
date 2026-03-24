@@ -23,7 +23,7 @@ resource "helm_release" "external_dns" {
   depends_on = [
     aws_iam_role_policy_attachment.external_dns,
     aws_eks_node_group.this,
-    aws_eks_access_entry.admin,
+    aws_eks_access_policy_association.admin,
   ]
 }
 
