@@ -13,7 +13,7 @@ resource "helm_release" "argocd" {
 
   depends_on = [
     aws_eks_node_group.this,
-    aws_eks_access_entry.admin,
+    aws_eks_access_policy_association.admin,
   ]
 }
 
