@@ -58,6 +58,57 @@ jobs:
         working-directory: terraform/01-vpc
         run: terraform apply -auto-approve
 
+  plan-ecr:
+    name: Plan ECR
+    needs: apply-vpc
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: terraform/03-ecr
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: terraform/03-ecr
+        run: terraform plan -no-color
+
+  apply-ecr:
+    name: Apply ECR
+    needs: plan-ecr
+    runs-on: ubuntu-latest
+    environment: prd
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: terraform/03-ecr
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: terraform/03-ecr
+        run: terraform apply -auto-approve
+
   plan-cluster:
     name: Plan Cluster
     needs: apply-vpc
