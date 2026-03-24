@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths: ['apps/**']
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: 444065722670.dkr.ecr.us-east-1.amazonaws.com
+
+jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      orders-api: ${{ steps.changes.outputs.orders-api }}
+      worker: ${{ steps.changes.outputs.worker }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check changed paths
+        id: changes
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "orders-api=true" >> "$GITHUB_OUTPUT"
+            echo "worker=true" >> "$GITHUB_OUTPUT"
+          else
+            CHANGED=$(git diff --name-only HEAD~1 HEAD)
+            echo "orders-api=$(echo "$CHANGED" | grep -q '^apps/orders-api/' && echo true || echo false)" >> "$GITHUB_OUTPUT"
+            echo "worker=$(echo "$CHANGED" | grep -q '^apps/worker/' && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-push:
+    name: Build ${{ matrix.app }}
+    needs: detect-changes
+    if: >-
+      needs.detect-changes.outputs.orders-api == 'true' ||
+      needs.detect-changes.outputs.worker == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - app: orders-api
+            context: apps/orders-api
+            ecr_repo: reliabilityos/orders-api
+            changed: ${{ needs.detect-changes.outputs.orders-api }}
+          - app: worker
+            context: apps/worker
+            ecr_repo: reliabilityos/worker
+            changed: ${{ needs.detect-changes.outputs.worker }}
+      fail-fast: false
+    steps:
+      - name: Skip if unchanged
+        if: matrix.changed != 'true'
+        run: echo "No changes in ${{ matrix.app }}, skipping" && exit 0
+
+      - name: Checkout
+        if: matrix.changed == 'true'
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        if: matrix.changed == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        if: matrix.changed == 'true'
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tag
+        if: matrix.changed == 'true'
+        id: tag
+        run: echo "tag=sha-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        if: matrix.changed == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/${{ matrix.ecr_repo }}:${{ steps.tag.outputs.tag }}
+
+  update-values:
+    name: Update Helm Values
+    needs: [detect-changes, build-push]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image tag
+        id: tag
+        run: echo "tag=sha-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Update orders-api values
+        if: needs.detect-changes.outputs.orders-api == 'true'
+        run: |
+          sed -i 's|tag:.*|tag: "${{ steps.tag.outputs.tag }}"|' helm/orders-api/values.yaml
+
+      - name: Update worker values
+        if: needs.detect-changes.outputs.worker == 'true'
+        run: |
+          sed -i 's|tag:.*|tag: "${{ steps.tag.outputs.tag }}"|' helm/worker/values.yaml
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add helm/*/values.yaml
+          git diff --staged --quiet && echo "No changes to commit" && exit 0
+          git commit -m "chore: update image tags to ${{ steps.tag.outputs.tag }}"
+          git push
