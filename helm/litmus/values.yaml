@@ -1,0 +1,14 @@
+operatorMode: standard
+
+portal:
+  enabled: false
+
+existingSecret: ""
+
+resources:
+  operator:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
