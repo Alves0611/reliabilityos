@@ -1,5 +1,7 @@
+import os
+
 from celery import Celery
-from celery.signals import setup_logging as celery_setup_logging
+from celery.signals import setup_logging as celery_setup_logging, worker_process_init
 from kombu import Exchange, Queue
 
 from worker.config import settings
@@ -13,6 +15,13 @@ def on_setup_logging(**kwargs):
     """Override Celery's logging to use our JSON formatter."""
     from worker.logging_config import setup_logging
     setup_logging()
+
+
+@worker_process_init.connect
+def start_metrics_server(**kwargs):
+    from prometheus_client import start_http_server
+    port = int(os.getenv("METRICS_PORT", "9090"))
+    start_http_server(port)
 
 
 app = Celery("worker")

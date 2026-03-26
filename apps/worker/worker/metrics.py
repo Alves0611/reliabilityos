@@ -9,5 +9,6 @@ ORDERS_PROCESSED = Counter(
 ORDER_PROCESSING_DURATION = Histogram(
     "order_processing_duration_seconds",
     "Time to process an order end-to-end",
-    buckets=[1.0, 2.0, 3.0, 4.0, 5.0, 7.5, 10.0, 15.0, 30.0],
+    ["status"],
+    buckets=[0.5, 1.0, 2.0, 3.0, 5.0, 7.5, 10.0, 15.0, 30.0, 60.0],
 )
