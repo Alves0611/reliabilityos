@@ -13,7 +13,11 @@ resources:
     cpu: 500m
     memory: 256Mi
 
+metricsPort: 9090
+
 env:
   WORKER_DATABASE_URL: "postgresql+psycopg2://orders:orders@postgresql.reliabilityos.svc.cluster.local:5432/orders"
   WORKER_BROKER_URL: "amqp://guest:guest@rabbitmq.reliabilityos.svc.cluster.local:5672//"
   WORKER_RESULT_BACKEND: "redis://redis-master.reliabilityos.svc.cluster.local:6379/0"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.tracing.svc.cluster.local:4317"
+  OTEL_SERVICE_NAME: "worker"
