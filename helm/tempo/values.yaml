@@ -18,6 +18,7 @@ tempo:
       backend: s3
       s3:
         bucket: tempo-traces-444065722670
+        endpoint: s3.us-east-1.amazonaws.com
         region: us-east-1
         insecure: false
       wal:
