@@ -1,6 +1,11 @@
 configs:
   params:
     server.insecure: true
+  repositories:
+    bitnami:
+      url: https://charts.bitnami.com/bitnami
+      name: bitnami
+      type: helm
 
 server:
   ingress:
