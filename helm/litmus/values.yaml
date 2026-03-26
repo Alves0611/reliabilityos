@@ -16,6 +16,7 @@ mongodb:
       memory: 512Mi
   persistence:
     size: 5Gi
+    storageClass: gp2
 
 global:
   security:
