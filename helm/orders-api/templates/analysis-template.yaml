@@ -14,9 +14,9 @@ spec:
         prometheus:
           address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
           query: |
-            sum(rate(http_requests_total{namespace="{{`{{ .Release.Namespace }}`}}", status=~"5.."}[2m]))
+            sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}", status=~"5.."}[2m]))
             /
-            sum(rate(http_requests_total{namespace="{{`{{ .Release.Namespace }}`}}"}[2m]))
+            sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}"}[2m]))
 
     - name: latency-p95
       interval: 30s
@@ -28,7 +28,7 @@ spec:
           address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
           query: |
             histogram_quantile(0.95,
-              sum(rate(http_request_duration_seconds_bucket{namespace="{{`{{ .Release.Namespace }}`}}"}[2m])) by (le)
+              sum(rate(http_request_duration_seconds_bucket{namespace="{{ .Release.Namespace }}"}[2m])) by (le)
             )
 ---
 apiVersion: v1
