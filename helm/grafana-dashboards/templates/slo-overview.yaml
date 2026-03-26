@@ -9,6 +9,7 @@ data:
     {
       "uid": "slo-overview",
       "title": "SLO Overview",
+      "tags": ["reliabilityos", "sre", "slo"],
       "timezone": "browser",
       "schemaVersion": 39,
       "version": 1,
@@ -383,7 +384,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "targets": [
             {
-              "expr": "sli:http_requests:error_rate:rate5m",
+              "expr": "sli:http_requests:error_rate:rate5m or vector(0)",
               "refId": "A",
               "legendFormat": "Error Rate"
             }

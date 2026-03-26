@@ -456,7 +456,7 @@ data:
       "refresh": "5m",
       "schemaVersion": 39,
       "style": "dark",
-      "tags": ["executive", "sre", "reliability"],
+      "tags": ["reliabilityos", "sre", "executive"],
       "templating": { "list": [] },
       "time": { "from": "now-7d", "to": "now" },
       "timepicker": {},

@@ -84,7 +84,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "sum(rate(http_requests_total{namespace=\"reliabilityos\", status=~\"5..\"}[5m])) / sum(rate(http_requests_total{namespace=\"reliabilityos\"}[5m]))",
+              "expr": "(sum(rate(http_requests_total{namespace=\"reliabilityos\", status=~\"5..\"}[5m])) or vector(0)) / sum(rate(http_requests_total{namespace=\"reliabilityos\"}[5m]))",
               "legendFormat": "error_rate",
               "refId": "A"
             }
@@ -152,7 +152,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "sum(rate(orders_processed_total{namespace=\"reliabilityos\", status=\"completed\"}[5m])) / sum(rate(orders_processed_total{namespace=\"reliabilityos\"}[5m]))",
+              "expr": "(sum(rate(orders_processed_total{namespace=\"reliabilityos\", status=\"completed\"}[5m])) or vector(0)) / (sum(rate(orders_processed_total{namespace=\"reliabilityos\"}[5m])) or vector(1))",
               "legendFormat": "success_rate",
               "refId": "A"
             }
@@ -387,7 +387,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "sum(rate(http_requests_total{namespace=\"reliabilityos\", status=~\"5..\"}[5m])) by (endpoint)",
+              "expr": "sum(rate(http_requests_total{namespace=\"reliabilityos\", status=~\"5..\"}[5m])) by (endpoint) or vector(0)",
               "legendFormat": "{{`{{endpoint}}`}}",
               "refId": "A"
             }
@@ -557,7 +557,7 @@ data:
       "refresh": "30s",
       "schemaVersion": 39,
       "style": "dark",
-      "tags": ["reliabilityos", "engineering"],
+      "tags": ["reliabilityos", "sre", "engineering"],
       "templating": { "list": [] },
       "time": { "from": "now-1h", "to": "now" },
       "timepicker": {},
