@@ -3,9 +3,10 @@ configs:
     server.insecure: true
   repositories:
     bitnami:
-      url: https://charts.bitnami.com/bitnami
+      url: registry-1.docker.io/bitnamicharts
       name: bitnami
       type: helm
+      enableOCI: "true"
 
 server:
   ingress:
