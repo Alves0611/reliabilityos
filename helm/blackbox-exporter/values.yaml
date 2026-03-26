@@ -1,0 +1,30 @@
+fullnameOverride: blackbox-exporter
+
+config:
+  modules:
+    http_2xx:
+      prober: http
+      timeout: 5s
+      http:
+        valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+        follow_redirects: true
+        preferred_ip_protocol: "ip4"
+
+serviceMonitor:
+  enabled: true
+  defaults:
+    interval: 15s
+  targets:
+    - name: orders-api-health
+      url: http://orders-api.reliabilityos.svc.cluster.local:8000/health
+      module: http_2xx
+    - name: orders-api-ready
+      url: http://orders-api.reliabilityos.svc.cluster.local:8000/ready
+      module: http_2xx
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 128Mi
