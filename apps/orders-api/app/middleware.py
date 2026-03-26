@@ -36,7 +36,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         finally:
             duration = time.perf_counter() - start
             REQUEST_COUNT.labels(method=method, endpoint=endpoint, status=status).inc()
-            REQUEST_DURATION.labels(method=method, endpoint=endpoint).observe(duration)
+            REQUEST_DURATION.labels(method=method, endpoint=endpoint, status=status).observe(duration)
             REQUESTS_IN_PROGRESS.labels(method=method).dec()
 
         return response
