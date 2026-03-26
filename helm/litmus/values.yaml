@@ -1,14 +1,22 @@
-operatorMode: standard
-
-portal:
-  enabled: false
-
-existingSecret: ""
-
-resources:
-  operator:
+mongodb:
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/mongodb
+    tag: latest
+  arbiter:
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/mongodb
+      tag: latest
+  resources:
     requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
+      cpu: 100m
       memory: 256Mi
+    limits:
+      memory: 512Mi
+  persistence:
+    size: 5Gi
+
+global:
+  security:
+    allowInsecureImages: true
