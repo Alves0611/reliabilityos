@@ -99,6 +99,18 @@ variable "loki_s3_bucket" {
   default     = ""
 }
 
+variable "enable_tempo" {
+  description = "Create Tempo IRSA role and S3 bucket for trace storage"
+  type        = bool
+  default     = true
+}
+
+variable "tempo_s3_bucket" {
+  description = "S3 bucket name for Tempo trace storage"
+  type        = string
+  default     = "tempo-traces-444065722670"
+}
+
 variable "enable_argocd" {
   description = "Deploy ArgoCD with app-of-apps pattern"
   type        = bool
