@@ -1,24 +1,7 @@
 fullnameOverride: tempo
 
 tempo:
-  storage:
-    trace:
-      backend: s3
-      s3:
-        bucket: tempo-traces-444065722670
-        region: us-east-1
-        insecure: false
-
-  receivers:
-    otlp:
-      protocols:
-        grpc:
-          endpoint: "0.0.0.0:4317"
-        http:
-          endpoint: "0.0.0.0:4318"
-
   retention: 168h
-
   resources:
     requests:
       cpu: 100m
@@ -29,6 +12,24 @@ tempo:
   metricsGenerator:
     enabled: true
     remoteWriteUrl: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
+
+  storage:
+    trace:
+      backend: s3
+      s3:
+        bucket: tempo-traces-444065722670
+        region: us-east-1
+        insecure: false
+      wal:
+        path: /var/tempo/wal
+
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
 
 serviceAccount:
   create: true
