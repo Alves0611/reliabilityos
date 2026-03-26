@@ -330,7 +330,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "expr": "sum(rate(http_requests_total{namespace=\"reliabilityos\"}[5m])) by (status)",
-              "legendFormat": "{{status}}",
+              "legendFormat": "{{`{{status}}`}}",
               "refId": "A"
             }
           ]
@@ -439,7 +439,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "expr": "sum(rate(orders_processed_total{namespace=\"reliabilityos\"}[5m])) by (status)",
-              "legendFormat": "{{status}}",
+              "legendFormat": "{{`{{status}}`}}",
               "refId": "A"
             }
           ]
@@ -497,7 +497,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"reliabilityos\"}[5m])) by (pod)",
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{`{{pod}}`}}",
               "refId": "A"
             }
           ]
@@ -548,7 +548,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "expr": "sum(container_memory_working_set_bytes{namespace=\"reliabilityos\"}) by (pod)",
-              "legendFormat": "{{pod}}",
+              "legendFormat": "{{`{{pod}}`}}",
               "refId": "A"
             }
           ]
