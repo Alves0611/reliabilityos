@@ -1,0 +1,46 @@
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: network-latency-postgres
+  namespace: reliabilityos
+spec:
+  engineState: active
+  appinfo:
+    appns: reliabilityos
+    applabel: app.kubernetes.io/name=postgresql
+    appkind: statefulset
+  chaosServiceAccount: litmus-admin
+  experiments:
+    - name: pod-network-latency
+      spec:
+        components:
+          env:
+            - name: TOTAL_CHAOS_DURATION
+              value: "120"
+            - name: NETWORK_LATENCY
+              value: "100"
+            - name: JITTER
+              value: "20"
+            - name: NETWORK_INTERFACE
+              value: "eth0"
+        probe:
+          - name: orders-api-latency
+            type: promProbe
+            mode: Continuous
+            runProperties:
+              probeTimeout: 10s
+              interval: 10s
+              retry: 3
+            promProbe/inputs:
+              endpoint: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+              query: sli:http_request_duration:p95:rate5m
+              comparator:
+                type: float
+                criteria: "<="
+                value: "1.0"
+---
+# Hypothesis: Adding 100ms network latency to PostgreSQL should degrade but not break the API
+# Expected: p95 latency < 1s (degraded but functional), no 500 errors
+# Blast radius: 100ms added latency to PostgreSQL pod
+# Kill switch: kubectl delete chaosengine network-latency-postgres -n reliabilityos
+# Success criteria: latency probe stays <= 1s, no 5xx errors
