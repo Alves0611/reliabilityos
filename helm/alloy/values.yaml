@@ -95,6 +95,24 @@ alloy:
         forward_to = [loki.write.loki.receiver]
 
         stage.cri {}
+
+        stage.json {
+          expressions = {
+            trace_id     = "trace_id",
+            span_id      = "span_id",
+            level        = "level",
+            service_name = "service",
+          }
+        }
+
+        stage.labels {
+          values = {
+            trace_id     = "",
+            span_id      = "",
+            level        = "",
+            service_name = "",
+          }
+        }
       }
 
       loki.write "loki" {
