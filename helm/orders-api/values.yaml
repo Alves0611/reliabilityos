@@ -22,6 +22,11 @@ resources:
     cpu: 500m
     memory: 256Mi
 
+canary:
+  enabled: true
+
 env:
   ORDERS_DATABASE_URL: "postgresql+asyncpg://orders:orders@postgresql.reliabilityos.svc.cluster.local:5432/orders"
   ORDERS_RABBITMQ_URL: "amqp://guest:guest@rabbitmq.reliabilityos.svc.cluster.local:5672//"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.tracing.svc.cluster.local:4317"
+  OTEL_SERVICE_NAME: "orders-api"
