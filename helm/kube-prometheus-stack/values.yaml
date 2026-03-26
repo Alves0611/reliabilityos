@@ -24,6 +24,30 @@ grafana:
       url: http://loki.logging.svc.cluster.local:3100
       isDefault: false
       editable: true
+      jsonData:
+        derivedFields:
+          - name: trace_id
+            matcherRegex: '"trace_id":\s*"(\w+)"'
+            url: "$${__value.raw}"
+            datasourceUid: tempo
+            urlDisplayLabel: View Trace
+
+    - name: Tempo
+      type: tempo
+      access: proxy
+      uid: tempo
+      url: http://tempo.tracing.svc.cluster.local:3100
+      isDefault: false
+      editable: true
+      jsonData:
+        tracesToLogsV2:
+          datasourceUid: loki
+          filterByTraceID: true
+          filterBySpanID: true
+        nodeGraph:
+          enabled: true
+        serviceMap:
+          datasourceUid: prometheus
 
 prometheus:
   prometheusSpec:
@@ -31,3 +55,320 @@ prometheus:
     serviceMonitorNamespaceSelector: {}
     podMonitorSelector: {}
     podMonitorNamespaceSelector: {}
+    ruleSelector: {}
+    ruleNamespaceSelector: {}
+    enableRemoteWriteReceiver: true
+
+additionalPrometheusRulesMap:
+  sli-recording-rules:
+    groups:
+      - name: sli.orders-api.availability
+        interval: 30s
+        rules:
+          - record: sli:http_requests:availability:rate5m
+            expr: |
+              sum(rate(http_requests_total{namespace="reliabilityos", status!~"5.."}[5m]))
+              /
+              sum(rate(http_requests_total{namespace="reliabilityos"}[5m]))
+          - record: sli:http_requests:availability:rate30m
+            expr: |
+              sum(rate(http_requests_total{namespace="reliabilityos", status!~"5.."}[30m]))
+              /
+              sum(rate(http_requests_total{namespace="reliabilityos"}[30m]))
+          - record: sli:http_requests:availability:rate1h
+            expr: |
+              sum(rate(http_requests_total{namespace="reliabilityos", status!~"5.."}[1h]))
+              /
+              sum(rate(http_requests_total{namespace="reliabilityos"}[1h]))
+          - record: sli:http_requests:availability:rate6h
+            expr: |
+              sum(rate(http_requests_total{namespace="reliabilityos", status!~"5.."}[6h]))
+              /
+              sum(rate(http_requests_total{namespace="reliabilityos"}[6h]))
+          - record: sli:http_requests:availability:rate1d
+            expr: |
+              sum(rate(http_requests_total{namespace="reliabilityos", status!~"5.."}[1d]))
+              /
+              sum(rate(http_requests_total{namespace="reliabilityos"}[1d]))
+
+      - name: sli.orders-api.latency
+        interval: 30s
+        rules:
+          - record: sli:http_request_duration:p95:rate5m
+            expr: |
+              histogram_quantile(0.95,
+                sum(rate(http_request_duration_seconds_bucket{namespace="reliabilityos", status!~"5.."}[5m])) by (le)
+              )
+          - record: sli:http_request_duration:p99:rate5m
+            expr: |
+              histogram_quantile(0.99,
+                sum(rate(http_request_duration_seconds_bucket{namespace="reliabilityos", status!~"5.."}[5m])) by (le)
+              )
+          - record: sli:http_request_duration:p95:rate1h
+            expr: |
+              histogram_quantile(0.95,
+                sum(rate(http_request_duration_seconds_bucket{namespace="reliabilityos", status!~"5.."}[1h])) by (le)
+              )
+          - record: sli:http_request_duration:p99:rate1h
+            expr: |
+              histogram_quantile(0.99,
+                sum(rate(http_request_duration_seconds_bucket{namespace="reliabilityos", status!~"5.."}[1h])) by (le)
+              )
+
+      - name: sli.orders-api.errors
+        interval: 30s
+        rules:
+          - record: sli:http_requests:error_rate:rate5m
+            expr: |
+              sum(rate(http_requests_total{namespace="reliabilityos", status=~"5.."}[5m]))
+              /
+              sum(rate(http_requests_total{namespace="reliabilityos"}[5m]))
+          - record: sli:http_requests:error_rate:rate1h
+            expr: |
+              sum(rate(http_requests_total{namespace="reliabilityos", status=~"5.."}[1h]))
+              /
+              sum(rate(http_requests_total{namespace="reliabilityos"}[1h]))
+
+      - name: sli.worker.processing
+        interval: 30s
+        rules:
+          - record: sli:worker:success_rate:rate5m
+            expr: |
+              sum(rate(orders_processed_total{namespace="reliabilityos", status="completed"}[5m]))
+              /
+              sum(rate(orders_processed_total{namespace="reliabilityos"}[5m]))
+          - record: sli:worker:success_rate:rate1h
+            expr: |
+              sum(rate(orders_processed_total{namespace="reliabilityos", status="completed"}[1h]))
+              /
+              sum(rate(orders_processed_total{namespace="reliabilityos"}[1h]))
+          - record: sli:worker:processing_duration:p95:rate5m
+            expr: |
+              histogram_quantile(0.95,
+                sum(rate(order_processing_duration_seconds_bucket{namespace="reliabilityos"}[5m])) by (le)
+              )
+
+      - name: slo.error-budget
+        interval: 1m
+        rules:
+          - record: slo:orders_api:availability:target
+            expr: "0.999"
+          - record: slo:orders_api:latency_p95_ms:target
+            expr: "200"
+          - record: slo:worker:success_rate:target
+            expr: "0.995"
+
+          - record: slo:orders_api:error_budget:remaining
+            expr: |
+              clamp_max(
+                1 - (
+                  (1 - sli:http_requests:availability:rate1d)
+                  /
+                  (1 - 0.999)
+                ),
+                1
+              )
+
+          - record: slo:orders_api:burn_rate:1h
+            expr: |
+              (1 - sli:http_requests:availability:rate1h) / (1 - 0.999)
+
+          - record: slo:orders_api:burn_rate:6h
+            expr: |
+              (1 - sli:http_requests:availability:rate6h) / (1 - 0.999)
+
+          - record: slo:worker:error_budget:remaining
+            expr: |
+              clamp_max(
+                1 - (
+                  (1 - sli:worker:success_rate:rate1h)
+                  /
+                  (1 - 0.995)
+                ),
+                1
+              )
+
+  burn-rate-alerts:
+    groups:
+      - name: alerts.slo.orders-api
+        rules:
+          - alert: OrdersAPIHighBurnRate_Critical
+            expr: |
+              slo:orders_api:burn_rate:1h > 14.4
+              and
+              (1 - sli:http_requests:availability:rate5m) / (1 - 0.999) > 14.4
+            for: 2m
+            labels:
+              severity: critical
+              service: orders-api
+              slo: availability
+            annotations:
+              summary: "orders-api burning error budget at 14.4x rate"
+              description: "At this rate, the entire 30-day error budget will be exhausted in ~2 hours."
+              runbook_url: "https://github.com/Alves0611/reliabilityos/blob/main/docs/runbooks/high-error-rate.md"
+              dashboard_url: "https://grafana.gabrielstudying.click/d/slo-overview"
+
+          - alert: OrdersAPIHighBurnRate_Warning
+            expr: |
+              slo:orders_api:burn_rate:6h > 6
+              and
+              (1 - sli:http_requests:availability:rate30m) / (1 - 0.999) > 6
+            for: 5m
+            labels:
+              severity: warning
+              service: orders-api
+              slo: availability
+            annotations:
+              summary: "orders-api burning error budget at 6x rate"
+              description: "At this rate, the entire 30-day error budget will be exhausted in ~5 days."
+              runbook_url: "https://github.com/Alves0611/reliabilityos/blob/main/docs/runbooks/high-error-rate.md"
+              dashboard_url: "https://grafana.gabrielstudying.click/d/slo-overview"
+
+          - alert: OrdersAPIHighBurnRate_Info
+            expr: |
+              (1 - sli:http_requests:availability:rate1d) / (1 - 0.999) > 1
+              and
+              slo:orders_api:burn_rate:6h > 1
+            for: 30m
+            labels:
+              severity: info
+              service: orders-api
+              slo: availability
+            annotations:
+              summary: "orders-api consuming error budget faster than expected"
+              description: "Burn rate above 1x for a sustained period. Review if action is needed."
+              runbook_url: "https://github.com/Alves0611/reliabilityos/blob/main/docs/runbooks/budget-exhausted.md"
+              dashboard_url: "https://grafana.gabrielstudying.click/d/slo-overview"
+
+          - alert: OrdersAPIHighLatency
+            expr: sli:http_request_duration:p95:rate5m > 0.2
+            for: 5m
+            labels:
+              severity: warning
+              service: orders-api
+              slo: latency
+            annotations:
+              summary: "orders-api p95 latency above 200ms SLO target"
+              description: "Current p95 latency: {{ $value | humanizeDuration }}."
+              runbook_url: "https://github.com/Alves0611/reliabilityos/blob/main/docs/runbooks/high-latency.md"
+              dashboard_url: "https://grafana.gabrielstudying.click/d/engineering"
+
+      - name: alerts.slo.worker
+        rules:
+          - alert: WorkerHighFailureRate
+            expr: |
+              (1 - sli:worker:success_rate:rate1h) / (1 - 0.995) > 6
+              and
+              (1 - sli:worker:success_rate:rate5m) / (1 - 0.995) > 6
+            for: 5m
+            labels:
+              severity: warning
+              service: worker
+              slo: success-rate
+            annotations:
+              summary: "worker burning error budget at 6x rate"
+              description: "Order processing failure rate is elevated."
+              runbook_url: "https://github.com/Alves0611/reliabilityos/blob/main/docs/runbooks/high-error-rate.md"
+              dashboard_url: "https://grafana.gabrielstudying.click/d/slo-overview"
+
+      - name: alerts.blackbox
+        rules:
+          - alert: OrdersAPIEndpointDown
+            expr: probe_success{job="blackbox-orders-api"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: orders-api
+            annotations:
+              summary: "orders-api endpoint unreachable"
+              description: "Synthetic probe to {{ $labels.instance }} has been failing for > 1 minute."
+              runbook_url: "https://github.com/Alves0611/reliabilityos/blob/main/docs/runbooks/high-error-rate.md"
+
+          - alert: OrdersAPISlowResponse
+            expr: probe_duration_seconds{job="blackbox-orders-api"} > 1
+            for: 3m
+            labels:
+              severity: warning
+              service: orders-api
+            annotations:
+              summary: "orders-api synthetic probe response time > 1s"
+              description: "Probe latency: {{ $value | humanizeDuration }}."
+              runbook_url: "https://github.com/Alves0611/reliabilityos/blob/main/docs/runbooks/high-latency.md"
+
+  capacity-alerts:
+    groups:
+      - name: alerts.capacity
+        rules:
+          - alert: HighCPUUsage
+            expr: |
+              sum(rate(container_cpu_usage_seconds_total{namespace="reliabilityos", container!=""}[5m])) by (pod)
+              /
+              sum(kube_pod_container_resource_limits{namespace="reliabilityos", resource="cpu"}) by (pod)
+              > 0.8
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Pod {{ $labels.pod }} CPU usage above 80%"
+
+          - alert: HighMemoryUsage
+            expr: |
+              sum(container_memory_working_set_bytes{namespace="reliabilityos", container!=""}) by (pod)
+              /
+              sum(kube_pod_container_resource_limits{namespace="reliabilityos", resource="memory"}) by (pod)
+              > 0.85
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Pod {{ $labels.pod }} memory usage above 85%"
+
+          - alert: PVCNearlyFull
+            expr: |
+              kubelet_volume_stats_used_bytes{namespace=~"reliabilityos|logging|monitoring"}
+              /
+              kubelet_volume_stats_capacity_bytes{namespace=~"reliabilityos|logging|monitoring"}
+              > 0.9
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "PVC {{ $labels.persistentvolumeclaim }} in {{ $labels.namespace }} is above 90% full"
+
+alertmanager:
+  config:
+    route:
+      receiver: "default"
+      group_by: ["alertname", "service", "namespace"]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+      routes:
+        - receiver: "critical"
+          match:
+            severity: critical
+          continue: true
+        - receiver: "warning"
+          match:
+            severity: warning
+        - receiver: "info"
+          match:
+            severity: info
+
+    inhibit_rules:
+      - source_matchers:
+          - severity = critical
+        target_matchers:
+          - severity = warning
+        equal: ["service", "namespace"]
+      - source_matchers:
+          - severity = critical
+        target_matchers:
+          - severity = info
+        equal: ["service", "namespace"]
+
+    receivers:
+      - name: "default"
+      - name: "critical"
+      - name: "warning"
+      - name: "info"
