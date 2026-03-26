@@ -9,6 +9,7 @@ data:
     {
       "uid": "capacity",
       "title": "Capacity Planning",
+      "tags": ["reliabilityos", "sre", "capacity"],
       "timezone": "browser",
       "schemaVersion": 39,
       "version": 1,
