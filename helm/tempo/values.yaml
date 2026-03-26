@@ -1,0 +1,42 @@
+fullnameOverride: tempo
+
+tempo:
+  storage:
+    trace:
+      backend: s3
+      s3:
+        bucket: tempo-traces-444065722670
+        region: us-east-1
+        insecure: false
+
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+
+  retention: 168h
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+  metricsGenerator:
+    enabled: true
+    remoteWriteUrl: "http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
+
+serviceAccount:
+  create: true
+  name: tempo
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::444065722670:role/EKS_Tempo_Role"
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClassName: gp2
