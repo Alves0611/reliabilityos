@@ -78,7 +78,7 @@ def process_order(self, order_id: str) -> dict:
             db.commit()
 
             duration = time.perf_counter() - start_time
-            ORDER_PROCESSING_DURATION.observe(duration)
+            ORDER_PROCESSING_DURATION.labels(status="completed").observe(duration)
             ORDERS_PROCESSED.labels(status="completed").inc()
 
             logger.info(
