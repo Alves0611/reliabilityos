@@ -215,7 +215,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{namespace=\"reliabilityos\"}[5m])) by (le, endpoint))",
-              "legendFormat": "{{endpoint}}",
+              "legendFormat": "{{`{{endpoint}}`}}",
               "refId": "A"
             }
           ]
@@ -388,7 +388,7 @@ data:
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
               "expr": "sum(rate(http_requests_total{namespace=\"reliabilityos\", status=~\"5..\"}[5m])) by (endpoint)",
-              "legendFormat": "{{endpoint}}",
+              "legendFormat": "{{`{{endpoint}}`}}",
               "refId": "A"
             }
           ]
