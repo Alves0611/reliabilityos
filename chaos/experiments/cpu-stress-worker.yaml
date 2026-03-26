@@ -1,44 +1,23 @@
-apiVersion: litmuschaos.io/v1alpha1
-kind: ChaosEngine
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
 metadata:
   name: cpu-stress-worker
   namespace: reliabilityos
 spec:
-  engineState: active
-  appinfo:
-    appns: reliabilityos
-    applabel: app=worker
-    appkind: deployment
-  chaosServiceAccount: litmus-admin
-  experiments:
-    - name: pod-cpu-hog
-      spec:
-        components:
-          env:
-            - name: TOTAL_CHAOS_DURATION
-              value: "180"
-            - name: CPU_CORES
-              value: "1"
-            - name: PODS_AFFECTED_PERC
-              value: "100"
-        probe:
-          - name: worker-queue-depth
-            type: promProbe
-            mode: Edge
-            runProperties:
-              probeTimeout: 30s
-              interval: 30s
-              retry: 3
-            promProbe/inputs:
-              endpoint: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
-              query: sum(rate(orders_processed_total{namespace="reliabilityos", status="completed"}[5m]))
-              comparator:
-                type: float
-                criteria: ">="
-                value: "0"
+  mode: all
+  selector:
+    namespaces:
+      - reliabilityos
+    labelSelectors:
+      app: worker
+  stressors:
+    cpu:
+      workers: 1
+      load: 80
+  duration: "180s"
 ---
-# Hypothesis: CPU stress on worker should trigger HPA scaling, no orders should be lost
-# Expected: Queue depth increases temporarily, HPA scales worker, queue clears after scale-up
+# Hypothesis: CPU stress on worker should trigger HPA scaling, no orders lost
+# Expected: Queue depth increases temporarily, HPA scales worker, queue clears
 # Blast radius: 1 worker pod (100% - single replica)
-# Kill switch: kubectl delete chaosengine cpu-stress-worker -n reliabilityos
-# Success criteria: All orders eventually processed, no DLQ messages
+# Kill switch: kubectl delete stresschaos cpu-stress-worker -n reliabilityos
+# Validation: All orders eventually processed, no DLQ messages
