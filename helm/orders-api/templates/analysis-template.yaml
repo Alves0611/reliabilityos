@@ -1,0 +1,49 @@
+{{- if .Values.canary.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ .Release.Name }}-success-rate
+spec:
+  metrics:
+    - name: error-rate
+      interval: 30s
+      count: 4
+      successCondition: result[0] < 0.01
+      failureLimit: 2
+      provider:
+        prometheus:
+          address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+          query: |
+            sum(rate(http_requests_total{namespace="{{`{{ .Release.Namespace }}`}}", status=~"5.."}[2m]))
+            /
+            sum(rate(http_requests_total{namespace="{{`{{ .Release.Namespace }}`}}"}[2m]))
+
+    - name: latency-p95
+      interval: 30s
+      count: 4
+      successCondition: result[0] < 0.2
+      failureLimit: 2
+      provider:
+        prometheus:
+          address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+          query: |
+            histogram_quantile(0.95,
+              sum(rate(http_request_duration_seconds_bucket{namespace="{{`{{ .Release.Namespace }}`}}"}[2m])) by (le)
+            )
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-canary
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+      protocol: TCP
+  selector:
+    app: {{ .Release.Name }}
+{{- end }}

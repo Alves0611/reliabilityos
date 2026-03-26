@@ -1,15 +1,37 @@
-{{- if not .Values.canary.enabled }}
-apiVersion: apps/v1
-kind: Deployment
+{{- if .Values.canary.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: {{ .Release.Name }}
   labels:
     app: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app: {{ .Release.Name }}
+  strategy:
+    canary:
+      canaryService: {{ .Release.Name }}-canary
+      stableService: {{ .Release.Name }}
+      steps:
+        - setWeight: 10
+        - pause: { duration: 2m }
+        - analysis:
+            templates:
+              - templateName: {{ .Release.Name }}-success-rate
+        - setWeight: 30
+        - pause: { duration: 2m }
+        - analysis:
+            templates:
+              - templateName: {{ .Release.Name }}-success-rate
+        - setWeight: 60
+        - pause: { duration: 2m }
+        - analysis:
+            templates:
+              - templateName: {{ .Release.Name }}-success-rate
+        - setWeight: 100
   template:
     metadata:
       labels:
