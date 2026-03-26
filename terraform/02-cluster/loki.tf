@@ -1,6 +1,6 @@
 resource "aws_iam_role" "loki" {
   count = var.enable_loki ? 1 : 0
-  name  = "${var.cluster_name}-loki-irsa-role"
+  name  = "EKS_Loki_Role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
