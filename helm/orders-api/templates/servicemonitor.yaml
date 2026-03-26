@@ -4,6 +4,7 @@ metadata:
   name: {{ .Release.Name }}
   labels:
     app: {{ .Release.Name }}
+    release: kube-prometheus-stack
 spec:
   selector:
     matchLabels:
