@@ -1,6 +1,10 @@
 grafana:
   enabled: true
 
+  grafana.ini:
+    server:
+      root_url: https://grafana.gabrielstudying.click
+
   service:
     type: ClusterIP
     port: 80
