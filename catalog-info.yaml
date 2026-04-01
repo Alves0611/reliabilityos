@@ -3,6 +3,15 @@ kind: System
 metadata:
   name: reliabilityos
   description: SRE portfolio project with production-grade observability, SLOs, and reliability practices on Kubernetes
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  links:
+    - url: https://grafana.gabrielstudying.click
+      title: Grafana
+    - url: https://argocd.gabrielstudying.click
+      title: ArgoCD
+    - url: https://orders.gabrielstudying.click
+      title: Orders API
 spec:
   owner: user:default/Alves0611
 ---
