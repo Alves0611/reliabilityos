@@ -16,8 +16,15 @@ resource "helm_release" "nginx_ingress" {
       service = {
         type = "LoadBalancer"
         annotations = {
-          "service.beta.kubernetes.io/aws-load-balancer-type"   = "nlb"
-          "service.beta.kubernetes.io/aws-load-balancer-scheme" = "internet-facing"
+          "service.beta.kubernetes.io/aws-load-balancer-type"              = "external"
+          "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"   = "ip"
+          "service.beta.kubernetes.io/aws-load-balancer-scheme"            = "internet-facing"
+          "service.beta.kubernetes.io/aws-load-balancer-ssl-cert"          = aws_acm_certificate_validation.this.certificate_arn
+          "service.beta.kubernetes.io/aws-load-balancer-ssl-ports"         = "443"
+          "service.beta.kubernetes.io/aws-load-balancer-backend-protocol"  = "tcp"
+        }
+        targetPorts = {
+          https = "http"
         }
       }
     }
@@ -26,5 +33,7 @@ resource "helm_release" "nginx_ingress" {
   depends_on = [
     aws_eks_node_group.this,
     aws_eks_access_policy_association.admin,
+    aws_acm_certificate_validation.this,
+    helm_release.load_balancer_controller,
   ]
 }
