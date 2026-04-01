@@ -368,7 +368,7 @@ alertmanager:
       routes:
         - receiver: "null"
           matchers:
-            - alertname =~ "Watchdog|InfoInhibitor|KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown"
+            - alertname =~ "Watchdog|InfoInhibitor|KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown|AlertmanagerFailedToSendAlerts"
         - receiver: "critical"
           matchers:
             - severity = critical
