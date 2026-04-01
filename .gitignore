@@ -31,5 +31,6 @@ build/
 .terraform.tfstate.lock.info
 secrets.tfvars
 
-# Docs 
-docs/
+# Docs (generated)
+docs/superpowers/
+site/

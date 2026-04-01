@@ -1,12 +1,78 @@
 apiVersion: backstage.io/v1alpha1
-kind: Component
+kind: System
 metadata:
   name: reliabilityos
-  description: ReliabilityOS
+  description: SRE portfolio project with production-grade observability, SLOs, and reliability practices on Kubernetes
+spec:
+  owner: user:default/Alves0611
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: orders-api
+  description: FastAPI REST API for order management with full SRE instrumentation
   annotations:
     github.com/project-slug: Alves0611/reliabilityos
     backstage.io/techdocs-ref: dir:.
+  links:
+    - url: https://grafana.gabrielstudying.click
+      title: Grafana Dashboards
+    - url: https://argocd.gabrielstudying.click
+      title: ArgoCD
+    - url: https://orders.gabrielstudying.click
+      title: Orders API
 spec:
   type: service
-  lifecycle: experimental
+  lifecycle: production
+  system: reliabilityos
+  owner: user:default/Alves0611
+  dependsOn:
+    - component:default/worker
+    - resource:default/postgresql
+    - resource:default/rabbitmq
+    - resource:default/redis
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: worker
+  description: Celery worker for async order processing with KEDA autoscaling
+spec:
+  type: service
+  lifecycle: production
+  system: reliabilityos
+  owner: user:default/Alves0611
+  dependsOn:
+    - resource:default/postgresql
+    - resource:default/rabbitmq
+    - resource:default/redis
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: postgresql
+  description: PostgreSQL 16 database for orders
+spec:
+  type: database
+  system: reliabilityos
+  owner: user:default/Alves0611
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: rabbitmq
+  description: RabbitMQ message broker with dead-letter exchange
+spec:
+  type: message-queue
+  system: reliabilityos
+  owner: user:default/Alves0611
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: redis
+  description: Redis cache and Celery result backend
+spec:
+  type: cache
+  system: reliabilityos
   owner: user:default/Alves0611

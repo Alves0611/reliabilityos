@@ -1,0 +1,23 @@
+site_name: ReliabilityOS
+site_description: SRE Portfolio Project - Production-grade observability, SLOs, and reliability practices on Kubernetes
+nav:
+  - Overview: index.md
+  - Architecture: architecture.md
+  - SRE Practices:
+      - SLOs & SLIs: sre/slos.md
+      - Error Budgets: sre/error-budgets.md
+      - On-Call: sre/on-call.md
+      - Incident Response: sre/incident-response.md
+      - Change Policy: sre/change-policy.md
+      - Cost Analysis: sre/cost-analysis.md
+  - Runbooks:
+      - High Error Rate: runbooks/high-error-rate.md
+      - High Latency: runbooks/high-latency.md
+      - Budget Exhausted: runbooks/budget-exhausted.md
+  - Templates:
+      - Postmortem: playbooks/postmortem.md
+      - Root Cause Analysis: playbooks/rca.md
+  - Setup:
+      - Secrets: setup/secrets.md
+plugins:
+  - techdocs-core
