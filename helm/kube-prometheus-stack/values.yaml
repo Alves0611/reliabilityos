@@ -19,6 +19,7 @@ grafana:
 
   additionalDataSources:
     - name: Loki
+      uid: loki
       type: loki
       access: proxy
       url: http://loki.logging.svc.cluster.local:3100
@@ -26,16 +27,16 @@ grafana:
       editable: true
       jsonData:
         derivedFields:
-          - name: trace_id
-            matcherRegex: '"trace_id":\s*"(\w+)"'
+          - name: TraceID
+            matcherRegex: '"trace_id":\\s*"(\\w+)"'
             url: "$${__value.raw}"
             datasourceUid: tempo
             urlDisplayLabel: View Trace
 
     - name: Tempo
+      uid: tempo
       type: tempo
       access: proxy
-      uid: tempo
       url: http://tempo.tracing.svc.cluster.local:3100
       isDefault: false
       editable: true
@@ -44,6 +45,8 @@ grafana:
           datasourceUid: loki
           filterByTraceID: true
           filterBySpanID: true
+          customQuery: true
+          query: '{namespace="reliabilityos"} | json | trace_id="$${__trace.traceId}"'
         nodeGraph:
           enabled: true
         serviceMap:
@@ -295,6 +298,22 @@ additionalPrometheusRulesMap:
               description: "Probe latency: {{ $value | humanizeDuration }}."
               runbook_url: "https://github.com/Alves0611/reliabilityos/blob/main/docs/runbooks/high-latency.md"
 
+  dlq-alerts:
+    groups:
+      - name: alerts.dlq
+        rules:
+          - alert: DeadLetterQueueNotEmpty
+            expr: rabbitmq_queue_messages{queue=~".*dlx.*|.*dead.*"} > 0
+            for: 5m
+            labels:
+              severity: warning
+              service: worker
+            annotations:
+              summary: "Dead-letter queue has {{ $value }} unprocessed messages"
+              description: "Messages in DLQ indicate order processing failures that exhausted retries."
+              runbook_url: "https://github.com/Alves0611/reliabilityos/blob/main/docs/runbooks/high-error-rate.md"
+              dashboard_url: "https://grafana.gabrielstudying.click/d/engineering"
+
   capacity-alerts:
     groups:
       - name: alerts.capacity
@@ -369,6 +388,15 @@ alertmanager:
 
     receivers:
       - name: "default"
+        webhook_configs:
+          - url: "http://alertmanager-webhook.monitoring.svc.cluster.local:9095/webhook"
+            send_resolved: true
       - name: "critical"
+        webhook_configs:
+          - url: "http://alertmanager-webhook.monitoring.svc.cluster.local:9095/webhook"
+            send_resolved: true
       - name: "warning"
+        webhook_configs:
+          - url: "http://alertmanager-webhook.monitoring.svc.cluster.local:9095/webhook"
+            send_resolved: true
       - name: "info"
