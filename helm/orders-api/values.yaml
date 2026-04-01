@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: 444065722670.dkr.ecr.us-east-1.amazonaws.com/reliabilityos/orders-api
-  tag: "sha-6d23f29"
+  tag: "sha-e713717"
   pullPolicy: IfNotPresent
 
 service:
