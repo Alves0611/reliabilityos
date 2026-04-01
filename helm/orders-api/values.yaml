@@ -30,3 +30,4 @@ env:
   ORDERS_RABBITMQ_URL: "amqp://guest:guest@rabbitmq.reliabilityos.svc.cluster.local:5672//"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo.tracing.svc.cluster.local:4317"
   OTEL_SERVICE_NAME: "orders-api"
+  FEATURE_CHAOS_ENABLED: "true"
