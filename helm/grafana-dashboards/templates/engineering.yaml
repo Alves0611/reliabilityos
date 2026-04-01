@@ -438,15 +438,52 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "sum(rate(orders_processed_total{namespace=\"reliabilityos\"}[5m])) by (status)",
+              "expr": "sum(rate(orders_processed_total{namespace=\"reliabilityos\"}[5m])) by (status) or label_replace(vector(0), \"status\", \"completed\", \"\", \"\")",
               "legendFormat": "{{`{{status}}`}}",
               "refId": "A"
             }
           ]
         },
         {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 1 },
+                  { "color": "red", "value": 10 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 8, "x": 16, "y": 23 },
+          "id": 20,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "textMode": "auto"
+          },
+          "title": "Dead Letter Queue",
+          "type": "stat",
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "rabbitmq_queue_messages{namespace=\"reliabilityos\", queue=~\".*dlx.*|.*dead.*\"} or vector(0)",
+              "legendFormat": "DLQ messages",
+              "refId": "A"
+            }
+          ]
+        },
+        {
           "collapsed": false,
-          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 },
           "id": 11,
           "title": "Saturation",
           "type": "row"
