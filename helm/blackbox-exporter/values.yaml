@@ -14,6 +14,8 @@ serviceMonitor:
   enabled: true
   defaults:
     interval: 30s
+    labels:
+      release: kube-prometheus-stack
   targets:
     - name: orders-api-health
       url: http://orders-api.reliabilityos.svc.cluster.local:8000/health
