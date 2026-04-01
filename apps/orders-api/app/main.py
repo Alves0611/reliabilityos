@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app import messaging
 from app.logging_config import setup_logging
 from app.middleware import MetricsMiddleware
-from app.routers import health, orders, products
+from app.routers import chaos, health, orders, products
 from app.telemetry import setup_telemetry
 
 # Initialize observability before anything else
@@ -39,6 +39,7 @@ FastAPIInstrumentor.instrument_app(app)
 app.include_router(products.router)
 app.include_router(orders.router)
 app.include_router(health.router)
+app.include_router(chaos.router)
 
 static_dir = Path(__file__).resolve().parent.parent / "static"
 app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
