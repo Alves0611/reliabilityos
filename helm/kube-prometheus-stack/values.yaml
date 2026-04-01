@@ -366,16 +366,19 @@ alertmanager:
       group_interval: 5m
       repeat_interval: 4h
       routes:
+        - receiver: "null"
+          matchers:
+            - alertname =~ "Watchdog|InfoInhibitor|KubeControllerManagerDown|KubeSchedulerDown|KubeProxyDown"
         - receiver: "critical"
-          match:
-            severity: critical
+          matchers:
+            - severity = critical
           continue: true
         - receiver: "warning"
-          match:
-            severity: warning
+          matchers:
+            - severity = warning
         - receiver: "info"
-          match:
-            severity: info
+          matchers:
+            - severity = info
 
     inhibit_rules:
       - source_matchers:
@@ -390,19 +393,19 @@ alertmanager:
         equal: ["service", "namespace"]
 
     receivers:
+      - name: "null"
       - name: "default"
         slack_configs:
           - api_url_file: /etc/alertmanager/secrets/slack-webhook/url
             channel: "#reliabilityos-alerts"
             send_resolved: true
-            title: '{{ template "slack.default.title" . }}'
-            text: >-
+            title: '{{ if eq .Status "firing" }}:fire: FIRING{{ else }}:white_check_mark: RESOLVED{{ end }} | {{ .CommonLabels.alertname }}'
+            text: |-
+              *Severity:* `{{ .CommonLabels.severity }}`
+              *Service:* {{ .CommonLabels.service }}
               {{ range .Alerts }}
-              *Alert:* {{ .Labels.alertname }}
-              *Severity:* {{ .Labels.severity }}
-              *Service:* {{ .Labels.service }}
-              *Description:* {{ .Annotations.description }}
-              {{ if .Annotations.runbook_url }}*Runbook:* {{ .Annotations.runbook_url }}{{ end }}
+              > {{ .Annotations.description }}
+              {{ if .Annotations.runbook_url }}> :book: <{{ .Annotations.runbook_url }}|Runbook>{{ end }}
               {{ end }}
       - name: "critical"
         slack_configs:
@@ -410,13 +413,12 @@ alertmanager:
             channel: "#reliabilityos-alerts"
             send_resolved: true
             color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
-            title: '🚨 [CRITICAL] {{ .CommonLabels.alertname }}'
-            text: >-
+            title: ':rotating_light: CRITICAL | {{ .CommonLabels.alertname }}'
+            text: |-
+              *Service:* {{ .CommonLabels.service }}
               {{ range .Alerts }}
-              *Service:* {{ .Labels.service }}
-              *Description:* {{ .Annotations.description }}
-              {{ if .Annotations.runbook_url }}*Runbook:* {{ .Annotations.runbook_url }}{{ end }}
-              {{ if .Annotations.dashboard_url }}*Dashboard:* {{ .Annotations.dashboard_url }}{{ end }}
+              > {{ .Annotations.description }}
+              {{ if .Annotations.runbook_url }}> :book: <{{ .Annotations.runbook_url }}|Runbook>{{ end }}{{ if .Annotations.dashboard_url }} | :chart_with_upwards_trend: <{{ .Annotations.dashboard_url }}|Dashboard>{{ end }}
               {{ end }}
       - name: "warning"
         slack_configs:
@@ -424,11 +426,31 @@ alertmanager:
             channel: "#reliabilityos-alerts"
             send_resolved: true
             color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
-            title: '⚠️ [WARNING] {{ .CommonLabels.alertname }}'
-            text: >-
+            title: ':warning: WARNING | {{ .CommonLabels.alertname }}'
+            text: |-
+              *Service:* {{ .CommonLabels.service }}
               {{ range .Alerts }}
-              *Service:* {{ .Labels.service }}
-              *Description:* {{ .Annotations.description }}
-              {{ if .Annotations.runbook_url }}*Runbook:* {{ .Annotations.runbook_url }}{{ end }}
+              > {{ .Annotations.description }}
+              {{ if .Annotations.runbook_url }}> :book: <{{ .Annotations.runbook_url }}|Runbook>{{ end }}
               {{ end }}
       - name: "info"
+        slack_configs:
+          - api_url_file: /etc/alertmanager/secrets/slack-webhook/url
+            channel: "#reliabilityos-alerts"
+            send_resolved: true
+            color: '{{ if eq .Status "firing" }}#439FE0{{ else }}good{{ end }}'
+            title: ':information_source: INFO | {{ .CommonLabels.alertname }}'
+            text: |-
+              *Service:* {{ .CommonLabels.service }}
+              {{ range .Alerts }}
+              > {{ .Annotations.description }}
+              {{ end }}
+
+kubeControllerManager:
+  enabled: false
+
+kubeScheduler:
+  enabled: false
+
+kubeProxy:
+  enabled: false
