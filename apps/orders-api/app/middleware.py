@@ -1,8 +1,9 @@
+import asyncio
 import time
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 
 from app.metrics import REQUEST_COUNT, REQUEST_DURATION, REQUESTS_IN_PROGRESS
 
@@ -13,7 +14,6 @@ class MetricsMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         method = request.method
-        # Normalize path: replace UUIDs with {id}
         path = request.url.path
         parts = path.strip("/").split("/")
         normalized = []
@@ -28,8 +28,18 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         start = time.perf_counter()
 
         try:
-            response = await call_next(request)
-            status = str(response.status_code)
+            from app.routers.chaos import get_latency_seconds, should_fail
+
+            latency = get_latency_seconds()
+            if latency > 0 and not path.startswith("/chaos"):
+                await asyncio.sleep(latency)
+
+            if should_fail() and not path.startswith(("/chaos", "/health", "/ready", "/metrics")):
+                response = JSONResponse(status_code=500, content={"detail": "Injected chaos error"})
+                status = "500"
+            else:
+                response = await call_next(request)
+                status = str(response.status_code)
         except Exception:
             status = "500"
             raise
