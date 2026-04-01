@@ -124,6 +124,18 @@ variable "github_token" {
   sensitive   = true
 }
 
+variable "custom_domain" {
+  description = "Base domain for all services"
+  type        = string
+  default     = "gabrielstudying.click"
+}
+
+variable "hosted_zone_name" {
+  description = "Route53 hosted zone name"
+  type        = string
+  default     = "gabrielstudying.click"
+}
+
 variable "tags" {
   description = "Additional tags for all resources"
   type        = map(string)
