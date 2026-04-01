@@ -1,0 +1,44 @@
+{{- if .Values.keda.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  scaleTargetRef:
+    name: {{ .Release.Name }}
+  pollingInterval: 15
+  cooldownPeriod: 60
+  minReplicaCount: {{ .Values.keda.minReplicas }}
+  maxReplicaCount: {{ .Values.keda.maxReplicas }}
+  triggers:
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: order.created
+        mode: QueueLength
+        value: {{ .Values.keda.queueLengthTarget | quote }}
+      authenticationRef:
+        name: {{ .Release.Name }}-rabbitmq-auth
+---
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: {{ .Release.Name }}-rabbitmq-auth
+spec:
+  secretTargetRef:
+    - parameter: host
+      name: {{ .Release.Name }}-rabbitmq-secret
+      key: host
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Release.Name }}-rabbitmq-secret
+  labels:
+    app: {{ .Release.Name }}
+type: Opaque
+stringData:
+  host: {{ .Values.keda.rabbitmqHost }}
+{{- end }}

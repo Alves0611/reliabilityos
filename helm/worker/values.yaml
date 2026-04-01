@@ -15,6 +15,13 @@ resources:
 
 metricsPort: 9090
 
+keda:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  queueLengthTarget: "5"
+  rabbitmqHost: "amqp://guest:guest@rabbitmq.reliabilityos.svc.cluster.local:5672//"
+
 env:
   WORKER_DATABASE_URL: "postgresql+psycopg2://orders:orders@postgresql.reliabilityos.svc.cluster.local:5432/orders"
   WORKER_BROKER_URL: "amqp://guest:guest@rabbitmq.reliabilityos.svc.cluster.local:5672//"

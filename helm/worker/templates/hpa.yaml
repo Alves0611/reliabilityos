@@ -1,3 +1,4 @@
+{{- if not .Values.keda.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -31,3 +32,4 @@ spec:
         - type: Pods
           value: 1
           periodSeconds: 120
+{{- end }}
