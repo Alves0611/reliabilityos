@@ -372,7 +372,6 @@ alertmanager:
         - receiver: "critical"
           matchers:
             - severity = critical
-          continue: true
         - receiver: "warning"
           matchers:
             - severity = warning
@@ -400,13 +399,7 @@ alertmanager:
             channel: "#reliabilityos-alerts"
             send_resolved: true
             title: '{{ if eq .Status "firing" }}:fire: FIRING{{ else }}:white_check_mark: RESOLVED{{ end }} | {{ .CommonLabels.alertname }}'
-            text: |-
-              *Severity:* `{{ .CommonLabels.severity }}`
-              *Service:* {{ .CommonLabels.service }}
-              {{ range .Alerts }}
-              > {{ .Annotations.description }}
-              {{ if .Annotations.runbook_url }}> :book: <{{ .Annotations.runbook_url }}|Runbook>{{ end }}
-              {{ end }}
+            text: "*Severity:* `{{ .CommonLabels.severity }}`\n*Service:* {{ .CommonLabels.service }}\n{{ range .Alerts }}{{ .Annotations.description }}\n{{ if .Annotations.runbook_url }}:book: <{{ .Annotations.runbook_url }}|Runbook>{{ end }}\n{{ end }}"
       - name: "critical"
         slack_configs:
           - api_url_file: /etc/alertmanager/secrets/slack-webhook/url
@@ -414,12 +407,7 @@ alertmanager:
             send_resolved: true
             color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
             title: ':rotating_light: CRITICAL | {{ .CommonLabels.alertname }}'
-            text: |-
-              *Service:* {{ .CommonLabels.service }}
-              {{ range .Alerts }}
-              > {{ .Annotations.description }}
-              {{ if .Annotations.runbook_url }}> :book: <{{ .Annotations.runbook_url }}|Runbook>{{ end }}{{ if .Annotations.dashboard_url }} | :chart_with_upwards_trend: <{{ .Annotations.dashboard_url }}|Dashboard>{{ end }}
-              {{ end }}
+            text: "*Service:* {{ .CommonLabels.service }}\n{{ range .Alerts }}{{ .Annotations.description }}\n{{ if .Annotations.runbook_url }}:book: <{{ .Annotations.runbook_url }}|Runbook>{{ end }}{{ if .Annotations.dashboard_url }}  :chart_with_upwards_trend: <{{ .Annotations.dashboard_url }}|Dashboard>{{ end }}\n{{ end }}"
       - name: "warning"
         slack_configs:
           - api_url_file: /etc/alertmanager/secrets/slack-webhook/url
@@ -427,12 +415,7 @@ alertmanager:
             send_resolved: true
             color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
             title: ':warning: WARNING | {{ .CommonLabels.alertname }}'
-            text: |-
-              *Service:* {{ .CommonLabels.service }}
-              {{ range .Alerts }}
-              > {{ .Annotations.description }}
-              {{ if .Annotations.runbook_url }}> :book: <{{ .Annotations.runbook_url }}|Runbook>{{ end }}
-              {{ end }}
+            text: "*Service:* {{ .CommonLabels.service }}\n{{ range .Alerts }}{{ .Annotations.description }}\n{{ if .Annotations.runbook_url }}:book: <{{ .Annotations.runbook_url }}|Runbook>{{ end }}\n{{ end }}"
       - name: "info"
         slack_configs:
           - api_url_file: /etc/alertmanager/secrets/slack-webhook/url
@@ -440,11 +423,7 @@ alertmanager:
             send_resolved: true
             color: '{{ if eq .Status "firing" }}#439FE0{{ else }}good{{ end }}'
             title: ':information_source: INFO | {{ .CommonLabels.alertname }}'
-            text: |-
-              *Service:* {{ .CommonLabels.service }}
-              {{ range .Alerts }}
-              > {{ .Annotations.description }}
-              {{ end }}
+            text: "*Service:* {{ .CommonLabels.service }}\n{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
 
 kubeControllerManager:
   enabled: false
