@@ -80,7 +80,7 @@ kubectl get applications -n argocd
 
 ## Documentation
 
-Full documentation available via [Backstage TechDocs](docs/) including SRE practices, runbooks, postmortem templates, and architecture details.
+Full documentation available via [Backstage TechDocs](docs/) including SLIs/SLOs, error budgets, incident response, on-call procedures, runbooks, postmortem templates, root cause analysis, and architecture details.
 
 ## Project Structure
 
