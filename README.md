@@ -2,18 +2,8 @@
 
 Production-grade SRE platform demonstrating observability, SLOs, incident response, and reliability engineering on Kubernetes.
 
-## Architecture
 
-```
-User → NGINX Ingress → orders-api (FastAPI) → PostgreSQL
-                                             → RabbitMQ → worker (Celery) → PostgreSQL
-                                                                          → Redis
-
-Observability: Prometheus + Grafana + Loki + Tempo + Alloy
-Reliability:   Argo Rollouts (canary) + Chaos Mesh + KEDA + HPA
-Alerting:      Multi-window burn-rate → AlertManager → Slack
-Infrastructure: Terraform (VPC + EKS + ECR) → ArgoCD (GitOps)
-```
+![ReliabilityOS Architecture](images/reliabilityos.drawio.svg)
 
 ## What This Project Demonstrates
 
