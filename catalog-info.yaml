@@ -2,86 +2,91 @@ apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
   name: reliabilityos
-  description: SRE portfolio project with production-grade observability, SLOs, and reliability practices on Kubernetes
+  title: ReliabilityOS
+  description: Plataforma de SRE com observabilidade, SLOs e resposta a incidentes no Kubernetes.
   annotations:
     backstage.io/techdocs-ref: dir:.
   links:
     - url: https://grafana.gabrielstudying.click
       title: Grafana
     - url: https://argocd.gabrielstudying.click
-      title: ArgoCD
+      title: Argo CD
     - url: https://orders.gabrielstudying.click
-      title: Orders API
+      title: API de pedidos
 spec:
-  owner: user:default/Alves0611
+  owner: user:alves0611
+  domain: reliability
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: orders-api
-  description: FastAPI REST API for order management with full SRE instrumentation
+  title: API de pedidos
+  description: API REST em FastAPI para pedidos, instrumentada com métricas, logs e traces.
   annotations:
     github.com/project-slug: Alves0611/reliabilityos
     backstage.io/techdocs-ref: dir:.
   links:
-    - url: https://grafana.gabrielstudying.click
-      title: Grafana Dashboards
-    - url: https://argocd.gabrielstudying.click
-      title: ArgoCD
     - url: https://orders.gabrielstudying.click
-      title: Orders API
+      title: API de pedidos
 spec:
   type: service
   lifecycle: production
+  owner: user:alves0611
   system: reliabilityos
-  owner: user:default/Alves0611
   dependsOn:
-    - component:default/worker
-    - resource:default/postgresql
-    - resource:default/rabbitmq
-    - resource:default/redis
+    - component:orders-worker
+    - resource:reliabilityos-postgresql
+    - resource:reliabilityos-rabbitmq
+    - resource:reliabilityos-redis
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: worker
-  description: Celery worker for async order processing with KEDA autoscaling
+  name: orders-worker
+  title: Worker de pedidos
+  description: Worker Celery que processa pedidos de forma assíncrona, com autoscaling por KEDA.
+  annotations:
+    github.com/project-slug: Alves0611/reliabilityos
 spec:
   type: service
   lifecycle: production
+  owner: user:alves0611
   system: reliabilityos
-  owner: user:default/Alves0611
   dependsOn:
-    - resource:default/postgresql
-    - resource:default/rabbitmq
-    - resource:default/redis
+    - resource:reliabilityos-postgresql
+    - resource:reliabilityos-rabbitmq
+    - resource:reliabilityos-redis
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
-  name: postgresql
-  description: PostgreSQL 16 database for orders
+  name: reliabilityos-postgresql
+  title: PostgreSQL de pedidos
+  description: Banco PostgreSQL 16 dos pedidos.
 spec:
   type: database
+  owner: user:alves0611
   system: reliabilityos
-  owner: user:default/Alves0611
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
-  name: rabbitmq
-  description: RabbitMQ message broker with dead-letter exchange
+  name: reliabilityos-rabbitmq
+  title: RabbitMQ de pedidos
+  description: Fila RabbitMQ com dead-letter exchange para o processamento de pedidos.
 spec:
-  type: message-queue
+  type: queue
+  owner: user:alves0611
   system: reliabilityos
-  owner: user:default/Alves0611
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
-  name: redis
-  description: Redis cache and Celery result backend
+  name: reliabilityos-redis
+  title: Redis de pedidos
+  description: Cache Redis e backend de resultados do Celery.
 spec:
   type: cache
+  owner: user:alves0611
   system: reliabilityos
-  owner: user:default/Alves0611
