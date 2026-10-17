@@ -21,7 +21,6 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: orders-api
-  title: API de pedidos
   description: API REST em FastAPI para pedidos, instrumentada com métricas, logs e traces.
   annotations:
     github.com/project-slug: Alves0611/reliabilityos
@@ -44,7 +43,6 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: orders-worker
-  title: Worker de pedidos
   description: Worker Celery que processa pedidos de forma assíncrona, com autoscaling por KEDA.
   annotations:
     github.com/project-slug: Alves0611/reliabilityos
